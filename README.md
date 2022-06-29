@@ -1,0 +1,2 @@
+# swiss-ultracycling-challenge
+This project aims to solve the problem of optimal route creation for the Swiss Ultracycling Challenge (SUCH). Given the mandatory checkpoints, the algorithm will find the shortest path to visit all Swiss cantons and checkpoints using Google Maps data, minimizing elevation and distance. This problem is an instance of the AGTSP (Asymmetric Generalized Traveling Salesman Problem) where a set of points are partitioned into clusters (cantons), and the cyclist has to visit every cluster exactly once.
