@@ -16,3 +16,5 @@ Proposed approach: Use intersection of cantonal borders and road network.
 http://webhotel4.ruc.dk/~keld/research/GLKH/ ANOTHER SOLVER
 
 https://ece.uwaterloo.ca/~sl2smith/GLNS/ JULIA SOLVER
+
+DOCKER
