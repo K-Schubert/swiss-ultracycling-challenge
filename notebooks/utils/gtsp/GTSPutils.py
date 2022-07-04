@@ -11,7 +11,7 @@ load_dotenv()
 
 DATA_PATH = os.environ['DATA_PATH']
 
-def createDistanceMatrix(api_data):
+def createDistanceMatrix(api_data, use_transport, optimize):
 
     df = pd.DataFrame(np.zeros((len(api_data.keys()), len(api_data.keys()))))
 
@@ -25,34 +25,42 @@ def createDistanceMatrix(api_data):
 
     # GM TRANSPORT CORRECTIONS
     ###########################################################################
-    
-    # ST IMIER
-    df.loc[0, 1] = 320
-    df.loc[1, 0] = 300
 
-    # LENZERHEIDE TGANTIENI-LIFT
-    df.loc[2, 3] = 240
-    df.loc[3, 2] = 300
+    if use_transport:
 
-    # LENZERHEIDE TGANTIENI-SPORZ
-    df.loc[2, 4] = 90
-    df.loc[4, 2] = 500
+        if optimize == 'time':
+        
+            # ST IMIER
+            df.loc[0, 1] = 320
+            df.loc[1, 0] = 300
 
-    # LENZERHEIDE LIFT-SPORZ
-    df.loc[3, 4] = 480
-    df.loc[4, 3] = 120
+            # LENZERHEIDE TGANTIENI-LIFT
+            df.loc[2, 3] = 240
+            df.loc[3, 2] = 300
 
-    # LENZERHEIDE BECKENRIED-GERSAU
-    df.loc[5, 6] = 1200
-    df.loc[6, 5] = 1200
+            # LENZERHEIDE TGANTIENI-SPORZ
+            df.loc[2, 4] = 90
+            df.loc[4, 2] = 500
 
-    # LENZERHEIDE GOSCHENEN-AIROLO
-    df.loc[7, 29] = 900
-    df.loc[29, 7] = 4500
+            # LENZERHEIDE LIFT-SPORZ
+            df.loc[3, 4] = 480
+            df.loc[4, 3] = 120
 
-    # LENZERHEIDE SANETSCH-GSTEIG
-    df.loc[8, 32] = 900
-    df.loc[32, 8] = 16200
+            # BECKENRIED-GERSAU
+            df.loc[5, 6] = 1200
+            df.loc[6, 5] = 1200
+
+            # GOSCHENEN-AIROLO
+            df.loc[7, 33] = 900
+            df.loc[33, 7] = 4500
+
+            # SANETSCH-GSTEIG
+            df.loc[8, 36] = 900
+            df.loc[36, 8] = 16200
+
+        elif optimize == 'distance':
+
+            pass
 
     return df
 
@@ -87,12 +95,13 @@ def createClusters(checkpoints, cluster_mapping):
     # DUMMY NODE
     such_2022 = such_2022.append([(45, 6.9)])
 
-    such_2022['cluster'] = ['BE1', 'BE2', 'GR1', 'GR2', 'GR3', 'NW', 'SZ', 'UR', 'VS', 'GE', 'VD', 'NE', 'NE', 'NE', 'JU', 'BL', 'SO', 'BS', 'AG', 'ZH', 'TG', 'SG', 'AR', 'AI', 'GL', 'ZG', 'LU', 'LU', 'OW', 'TI', 'SH', 'FR', 'BE', 'FR', 'FR', 'TI', 'END', 'DUMMY']
+    such_2022['cluster'] = ['BE1', 'BE2', 'GR1', 'GR2', 'GR3', 'NW', 'SZ', 'UR', 'VS', 'GE', 'VD', 'VD', 'VD', 'VD', 'VD', 'NE', 'NE', 'NE', 'JU', 'BL', 'SO', 'BS', 'AG', 'ZH', 'TG', 'SG', 'AR', 'AI', 'GL', 'ZG', 'LU', 'LU', 'OW', 'TI', 'SH', 'FR', 'BE', 'FR', 'FR', 'TI', 'TI', 'TI', 'TI', 'GR', 'GR', 'END', 'DUMMY']
 
     ######### LOAD CLUSTER MAPPING HERE IF USING FCT
     
     such_2022.replace(cluster_mapping, inplace=True)
     such_2022.reset_index(drop=True, inplace=True)
+    such_2022 = such_2022.rename(columns={0: 'latitude', 1: 'longitude'})
 
     clusters = such_2022.groupby(by='cluster')
     clusters = [(cluster[0], [x+1 for x in list(cluster[1].index)]) for cluster in clusters]
@@ -102,7 +111,7 @@ def createClusters(checkpoints, cluster_mapping):
 def createGTSPfile(df, clusters):
 
     try:
-            os.remove(os.path.join(DATA_PATH, 'GTSP_FILES', 'test_2022.gtsp'))
+        os.remove(os.path.join(DATA_PATH, 'GTSP_FILES', 'test_2022.gtsp'))
     except FileNotFoundError:
         pass
 
@@ -151,21 +160,19 @@ def loadOptimalTour(tour_filename):
 
 def reOrderTour(such_2022, tour, cluster_mapping):
 
-
-
     df_tour = such_2022.loc[tour].replace({v: k for k, v in cluster_mapping.items()}).iloc[::-1]
 
     df_1 = df_tour.loc[df_tour[df_tour.cluster == 'DUMMY'].index[0]:].iloc[1:]
     df_2 = df_tour.loc[:df_tour[df_tour.cluster == 'DUMMY'].index[0]].iloc[:-1]
     df_tour = pd.concat([df_1, df_2])
 
-    df_tour.replace({0: 'latitude', 1: 'longitude'}, inplace=True)
+    #df_tour = df_tour.rename(columns={0: 'latitude', 1: 'longitude'})
 
-    such_2022 = such_2022.rename(columns={0: 'latitude', 1: 'longitude'})
+    #such_2022 = such_2022.rename(columns={0: 'latitude', 1: 'longitude'})
 
     tour_coord_x, tour_coord_y = convertWSG84toMN95(df_tour)
 
-    return tour_coord_x, tour_coord_y
+    return tour_coord_x, tour_coord_y, df_tour
 
 
 

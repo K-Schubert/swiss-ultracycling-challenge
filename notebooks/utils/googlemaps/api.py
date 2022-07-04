@@ -5,8 +5,8 @@ def gm_distance_api(origins, destinations, API_KEY):
     
     output_format = 'json'
 
-    avoid = 'highways'
-    mode = 'BICYCLING'
+    avoid = 'highways|ferries'
+    mode = 'bicycling'
 
     origins = str(origins[0]) + '%2C' + str(origins[1])
     if len(destinations) > 1:
